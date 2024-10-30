@@ -22,5 +22,5 @@ echo "Starting the install for NoSQLBenchark 5..." \
     sudo tee /etc/apt/sources.list.d/docker.list > /dev/null \
 && sudo apt-get update \
 && sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin -y \
-&& sudo groupadd docker > /dev/null; sudo usermod -aG docker $USER \
-&& echo "Make sure to logout now (`logout`), then log back in as your user `su - <User Name>`."
+&& sudo usermod -aG docker $USER \
+&& echo "Make sure to logout now, then log back in as your user."

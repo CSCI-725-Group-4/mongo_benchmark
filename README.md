@@ -21,6 +21,17 @@ This guide explains how to install NoSQLBench, Docker, and MongoDB, and how to r
     su - walrus
     ```
 
+- Clone this repo into your WSL install: 
+    ```bash
+    git clone https://github.com/CSCI-725-Group-4/mongo_benchmark.git
+    cd mongo_benchmark/ 
+    ```
+
+- Install ZSH: 
+    ```bash
+    sudo apt update && sudo apt upgrade -y && sudo apt-get install zsh -y
+    ```
+
 ## Step 1: Install NoSQLBench, Docker, and MongoDB
 Run the following command to install NoSQLBench, Docker, and MongoDB:
 
@@ -41,6 +52,7 @@ zsh install_p1.sh 2>&1 | tee -a no_bench_install.log
 
 3. After logging back in, complete the MongoDB setup by running:
     ```bash
+    cd ~/mongo_benchmark/
     zsh install_p2.sh 2>&1 | tee -a no_bench_install.log
     ```
 
@@ -69,7 +81,7 @@ To verify that MongoDB is running and the test data was inserted correctly, foll
 
 2. (Option 2) You can run a basic MongoDB benchmark using NoSQLBench with the following command:
     ```bash
-    ./nb5 ~/activities/mongodb_basic.yaml
+    ./nb5 ~/mongo_benchmark/activities/mongodb_basic.yaml
     ```
 
     This will execute the benchmark against the MongoDB instance running inside Docker.
