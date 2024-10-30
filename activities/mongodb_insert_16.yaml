@@ -1,0 +1,88 @@
+description: NoBench data generator for inserting complex JSON objects.
+
+scenarios:
+  default:
+    insert: run driver=mongodb connection=mongodb://localhost:27017 database=testSmallInsert tags==block:"insert.*", cycles===TEMPLATE(insert-cycles,16000) threads=auto errors=timer,warn
+
+bindings:
+  brown_corpus: Lines("~/mongo_benchmark/activities/brown_corpus_output.txt");
+
+  seq_key: Mod(<<keyCount:1000000>>); ToString();
+  seq_value: Mod(<<valueCount:1000000000>>); <<valueSizeDist:Hash()>>; ToString();
+  rw_key: <<keyDist:Uniform(0,1000000)>>; ToString();
+  rw_value: <<valDist:Uniform(0,1000000000)>>; <<valueSizeDist:Hash()>>; ToString();
+
+  # Unique Strings and Numbers
+  str1: RandomString(100);
+  str2: RandomString(100);
+  num: Mod(<<keyCount:16000>>);
+
+  # Boolean (50% true, 50% false)
+  bool: Random(0,1); 
+
+  # Dynamic values (dyn1 and dyn2)
+  dyn1: Switch(95, num, str1);  # 95% num, 5% str1
+  dyn2: Switch(33, str1, Switch(50, num, bool));  # 1/3 str1, 1/3 num, 1/3 bool
+
+  # Nested array of strings from the Brown Corpus
+  nested_arr: Sample(0, 7, Zipfian(brown_corpus), String);
+  
+  str1_lst: List(str1, 16000);
+  nested_obj_str: Sample(1, str1_list);
+  nested_obj_num: Random(0, 16000);
+
+  # Sparse attributes
+  sparse_cluster: Mod(<<keyCount:100>>);  # Determine cluster
+  sparse_attrs: [
+    "sparse<<sparse_cluster>>0",
+    "sparse<<sparse_cluster>>1",
+    "sparse<<sparse_cluster>>2",
+    "sparse<<sparse_cluster>>3",
+    "sparse<<sparse_cluster>>4",
+    "sparse<<sparse_cluster>>5",
+    "sparse<<sparse_cluster>>6",
+    "sparse<<sparse_cluster>>7",
+    "sparse<<sparse_cluster>>8",
+    "sparse<<sparse_cluster>>9"
+  ]
+  sparse_values: RandomStringSet(10, "sparse_value");
+
+  # Thousandth mod value
+  thousandth: Mod(num, 1000);
+
+blocks:
+  insert:
+    params:
+      readPreference: primary
+    ops:
+      insert: >2
+        {
+          insert: "<<collection:keyvalue>>",
+          documents: [
+            { 
+              _id: {seq_key}, 
+              str1: {str1}, 
+              str2: {str2}, 
+              num: {num}, 
+              bool: {bool},
+              dyn1: {dyn1},
+              dyn2: {dyn2},
+              nested_arr: {nested_arr},
+              nested_obj: {
+                str: nested_obj_str,
+                num: nested_obj_num
+              },
+              thousandth: {thousandth},
+              <<sparse_attrs[0]>>: {sparse_values[0]},
+              <<sparse_attrs[1]>>: {sparse_values[1]},
+              <<sparse_attrs[2]>>: {sparse_values[2]},
+              <<sparse_attrs[3]>>: {sparse_values[3]},
+              <<sparse_attrs[4]>>: {sparse_values[4]},
+              <<sparse_attrs[5]>>: {sparse_values[5]},
+              <<sparse_attrs[6]>>: {sparse_values[6]},
+              <<sparse_attrs[7]>>: {sparse_values[7]},
+              <<sparse_attrs[8]>>: {sparse_values[8]},
+              <<sparse_attrs[9]>>: {sparse_values[9]}
+            }
+          ]
+        }
