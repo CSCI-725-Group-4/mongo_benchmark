@@ -1,0 +1,155 @@
+
+description: |
+  This workload emulates CRUD operations for the mongoDB.
+  It generates a simple JSON document to be used for writes and updates.
+  It's a counterpart of the Stargate's Documents API CRUD Basic workflow.
+
+scenarios:
+  default:
+    schema:   run driver=mongodb connection=mongodb://localhost:27017 database=testing tags==block:"schema.*" threads==1 cycles==UNDEF
+    write:    run driver=mongodb connection=mongodb://localhost:27017 database=testing tags==block:"write.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,10)) threads=auto errors=timer,warn
+    read:     run driver=mongodb connection=mongodb://localhost:27017 database=testing tags==block:"read.*",  cycles===TEMPLATE(read-cycles,TEMPLATE(docscount,10)) threads=auto errors=timer,warn
+    update:   run driver=mongodb connection=mongodb://localhost:27017 database=testing tags==block:"update.*", cycles===TEMPLATE(update-cycles,TEMPLATE(docscount,10)) threads=auto errors=timer,warn
+    delete:   run driver=mongodb connection=mongodb://localhost:27017 database=testing tags==block:"delete.*", cycles===TEMPLATE(delete-cycles,TEMPLATE(docscount,10)) threads=auto errors=timer,warn
+
+bindings:
+  seq_key: Mod(<<docscount:10000000>>); ToString() -> String
+  random_key: Uniform(0,<<docscount:10000000>>); ToString() -> String
+
+  user_id: ToHashedUUID(); ToString() -> String
+  created_on: Uniform(1262304000,1577836800) -> long
+  gender: WeightedStrings('M:10;F:10;O:1')
+  full_name: FullNames()
+  married: ModuloToBoolean()
+  city: Cities()
+  country_code: CountryCodes()
+  lat: Uniform(-180d, 180d)
+  lng: Hash() -> long; Uniform(-180d, 180d)
+  friend_id: Add(-1); ToHashedUUID(); ToString() -> String
+
+blocks:
+  schema:
+    ops:
+      dummy-insert: >2
+        {
+          insert: "<<collection:crud_basic>>",
+          documents: [ { _id: "dummyyyy" } ]
+        }
+      drop-collection: |
+        {
+          drop: "<<collection:crud_basic>>"
+        }
+      create-collection: |
+        {
+          create: "<<collection:crud_basic>>"
+        }
+      create-indexes: |
+        {
+          createIndexes: "<<collection:crud_basic>>",
+          indexes: [
+            {
+              key: { user_id: 1 },
+              name: "user_id_idx",
+              unique: true
+            },
+            {
+              key: { created_on: 1 },
+              name: "created_on_idx"
+            },
+            {
+              key: { gender: 1 },
+              name: "gender_idx"
+            }
+          ]
+        }        
+
+  write:
+    ops:
+      write-document: >2
+        {
+          insert: "<<collection:crud_basic>>",
+          writeConcern: { w: "majority" },
+          documents: [
+            {
+              "_id":          "{seq_key}",
+              "user_id":      "{user_id}",
+              "created_on":   {created_on},
+              "gender":       "{gender}",
+              "full_name":    "{full_name}",
+              "married":      {married},
+              "address": {
+                "primary": {
+                  "city":   "{city}",
+                  "cc":     "{country_code}"
+                },
+                "secondary":  {}
+              },
+              "coordinates": [
+                {lat},
+                {lng}
+              ],
+              "children": [],
+              "friends": [
+                "{friend_id}"
+              ],
+              "debt": null
+            }
+          ]
+        }
+  read:
+    ops:
+      read-document: >2
+        {
+          find: "<<collection:crud_basic>>",
+          filter: { _id: "{random_key}" }
+        }        
+
+  update:
+    ops:
+      update-document: >2
+        {
+          update: "<<collection:crud_basic>>",
+          writeConcern: { w: "majority" },
+          updates: [
+            {
+              q: { _id: "{random_key}" },
+              u: {
+                "_id":          "{seq_key}",
+                "user_id":      "{user_id}",
+                "created_on":   {created_on},
+                "gender":       "{gender}",
+                "full_name":    "{full_name}",
+                "married":      {married},
+                "address": {
+                  "primary": {
+                    "city":   "{city}",
+                    "cc":     "{country_code}"
+                  },
+                  "secondary":  {}
+                },
+                "coordinates": [
+                  {lat},
+                  {lng}
+                ],
+                "children": [],
+                "friends": [
+                  "{friend_id}"
+                ],
+                "debt": null
+              }
+            }
+          ]
+        }        
+
+  delete:
+    ops:
+      delete-document: >2
+        {
+          delete: "<<collection:crud_basic>>",
+          deletes: [
+            {
+              q: { _id: "{seq_key}" },
+              limit: 1
+            }
+          ]
+        }
