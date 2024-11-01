@@ -10,20 +10,22 @@ bindings:
   seq_key: Mod(<<insert-cycles:1000000>>); ToString()
 
   # Unique Strings and Numbers
-  str1: Sample(1, Zipfian(brown_corpus));
-  str2: Sample(1, Zipfian(brown_corpus));
+  str1: Sample(1, Zipfian(Values(brown_corpus)))
+  str2: Sample(1, Zipfian(Values(brown_corpus)))
   num: Identity()
 
   # Boolean (50% true, 50% false)
-  bool: Random(0,1)
+  bool: Boolean()
 
   # Dynamic values (dyn1 and dyn2)
-  num_str: num; ToString() -> String
-  dyn1: CoinFunc(0.95, num_str, str1)  # 95% num, 5% str1
-  dyn2: CoinFunc(0.33, str1, CoinFunc(0.5, num, bool))  # 1/3 str1, 1/3 num, 1/3 bool
+  # 95% num, 5% str1
+  dyn1: CoinFunc(0.95, num, str1)
+  # 1/3 str1, 1/3 num, 1/3 bool
+  inner_dyn2: CoinFunc(0.5, num, bool)
+  dyn2: CoinFunc(0.33, str1, inner_dyn2)
 
   # Nested array of strings from the Brown Corpus
-  nested_arr_size: Mod(7); Add(1) -> int
+  nested_arr_size: Mod(7); Add(1) -> Integer
   nested_arr: Sample(nested_arr_size, Zipfian(brown_corpus));
   
   str1_lst: List(str1, 16000)
@@ -53,7 +55,7 @@ bindings:
   sparse_values_9: Sample(1, sparse_value_set)
 
   # Thousandth mod value
-  thousandth: num; Mod(<<insert-cycles:1000>>) -> int
+  thousandth: num; Mod(<<insert-cycles:1000>>) -> Integer
 
 blocks:
   insert:
