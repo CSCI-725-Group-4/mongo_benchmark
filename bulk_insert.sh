@@ -18,4 +18,4 @@ else
 fi
 
 echo "Running NoSQLBench..."
-./nb5 ~/mongo_benchmark/activities/mongodb_insert_16.yaml
+./nb5 ~/mongo_benchmark/activities/mongodb_insert_16.yaml rampup-cycles=16000
