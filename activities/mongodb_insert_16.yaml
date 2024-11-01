@@ -1,95 +1,63 @@
-description: NoBench data generator for inserting complex JSON objects.
+description: Testing Identity function for generating sequential integer num
 
 scenarios:
   default:
-    insert: run driver=mongodb connection=mongodb://localhost:27017 database=testSmallInsert tags==block:"insert.*", cycles===TEMPLATE(insert-cycles,16000) threads=auto errors=timer,warn
+    insert: run driver=mongodb connection=mongodb://localhost:27017 database=testData tags==block:"insert.*" cycles===TEMPLATE(rampup-cycles,10) threads=1
 
 bindings:
-  brown_corpus: Lines("~/mongo_benchmark/activities/brown_corpus_output.txt")
-
-  seq_key: Mod(<<insert-cycles:1000000>>); ToString()
-
-  # Unique Strings and Numbers
-  str1: Sample(1, Zipfian(Values(brown_corpus)))
-  str2: Sample(1, Zipfian(Values(brown_corpus)))
   num: Identity()
-
-  # Boolean (50% true, 50% false)
-  bool: Boolean()
-
-  # Dynamic values (dyn1 and dyn2)
-  # 95% num, 5% str1
-  dyn1: CoinFunc(0.95, num, str1)
-  # 1/3 str1, 1/3 num, 1/3 bool
-  inner_dyn2: CoinFunc(0.5, num, bool)
-  dyn2: CoinFunc(0.33, str1, inner_dyn2)
-
-  # Nested array of strings from the Brown Corpus
-  nested_arr_size: Mod(7); Add(1) -> Integer
-  nested_arr: Sample(nested_arr_size, Zipfian(brown_corpus));
-  
-  str1_lst: List(str1, 16000)
-  nested_obj_str: Sample(1, str1_list)
-  nested_obj_num: Random(0, 16000)
-
-  # Sparse clustering logic
-  sparse_cluster: Mod(<<insert-cycles:100>>)  # Generates a cluster number (0 to 99)
-
-  # Random values for the 10 sparse attributes, chosen from a set of 10 strings
-  sparse_value_set: [
-    "sparse_value_1", "sparse_value_2", "sparse_value_3", "sparse_value_4", 
-    "sparse_value_5", "sparse_value_6", "sparse_value_7", "sparse_value_8", 
-    "sparse_value_9", "sparse_value_10"
-  ]
-
-  # Each sparse attribute in the cluster is assigned a random value from the set of 10 strings
-  sparse_values_0: Sample(1, sparse_value_set)
-  sparse_values_1: Sample(1, sparse_value_set)
-  sparse_values_2: Sample(1, sparse_value_set)
-  sparse_values_3: Sample(1, sparse_value_set)
-  sparse_values_4: Sample(1, sparse_value_set)
-  sparse_values_5: Sample(1, sparse_value_set)
-  sparse_values_6: Sample(1, sparse_value_set)
-  sparse_values_7: Sample(1, sparse_value_set)
-  sparse_values_8: Sample(1, sparse_value_set)
-  sparse_values_9: Sample(1, sparse_value_set)
-
-  # Thousandth mod value
-  thousandth: num; Mod(<<insert-cycles:1000>>) -> Integer
+  bool: HashInterval(2); ToBoolean()
+  zipf: CSVSampler('Text','Zipf_Value','sum','activities/output_with_zipf.csv'); Prefix('"'); Suffix('"')
+  sparse_val: HashInterval(99); Format('%02d')
+  str_1: AlphaNumericString(50); Prefix('"'); Suffix('"'); SaveString('str_1')
+  str_other: Add(-1); Add(<<rampup-cycles:10>>); Mod(<<rampup-cycles:10>>); AlphaNumericString(50); Prefix('"'); Suffix('"')
+  num_other: Hash(); Mod(<<rampup-cycles:10>>)
+  str_2: Hash(); AlphaNumericString(50); Prefix('"'); Suffix('"')
+  dyn1: Identity(); CoinFunc(0.95, Identity(), LoadString('str_1'))
+  # FixedValue(56L) should technically be 'bool' from above, but using Flow(HashInterval(2), ToBoolean()) was crashing and I could not find an alternative solution
+  dyn2: Identity(); CoinFunc(0.33, FixedValue(56L), CoinFunc(0.5, Identity(), LoadString('str_1')))
+  thousandth: Mod(1000)
+  zip_fs: ListSizedHashed(Mod(8), Flow(CSVSampler('Text','Zipf_Value','sum','activities/output_with_zipf.csv'), Prefix('"'), Suffix('"')))
+  sparse_0_str: HashInterval(99); Mod(<<rampup-cycles:10>>); AlphaNumericString(50); Prefix('"'); Suffix('"')
+  sparse_1_str: HashInterval(99); Add(1); Mod(<<rampup-cycles:10>>); AlphaNumericString(50); Prefix('"'); Suffix('"')
+  sparse_2_str: HashInterval(99); Add(2); Mod(<<rampup-cycles:10>>); AlphaNumericString(50); Prefix('"'); Suffix('"')
+  sparse_3_str: HashInterval(99); Add(3); Mod(<<rampup-cycles:10>>); AlphaNumericString(50); Prefix('"'); Suffix('"')
+  sparse_4_str: HashInterval(99); Add(4); Mod(<<rampup-cycles:10>>); AlphaNumericString(50); Prefix('"'); Suffix('"')
+  sparse_5_str: HashInterval(99); Add(5); Mod(<<rampup-cycles:10>>); AlphaNumericString(50); Prefix('"'); Suffix('"')
+  sparse_6_str: HashInterval(99); Add(6); Mod(<<rampup-cycles:10>>); AlphaNumericString(50); Prefix('"'); Suffix('"')
+  sparse_7_str: HashInterval(99); Add(7); Mod(<<rampup-cycles:10>>); AlphaNumericString(50); Prefix('"'); Suffix('"')
+  sparse_8_str: HashInterval(99); Add(8); Mod(<<rampup-cycles:10>>); AlphaNumericString(50); Prefix('"'); Suffix('"')
+  sparse_9_str: HashInterval(99); Add(9); Mod(<<rampup-cycles:10>>); AlphaNumericString(50); Prefix('"'); Suffix('"')
 
 blocks:
   insert:
-    params:
-      readPreference: primary
     ops:
       insert: >2
         {
-          insert: "<<collection:keyvalue>>",
+          insert: "<<collection:test_data>>",
           documents: [
             { 
-              _id: {seq_key}, 
-              str1: {str1}, 
-              str2: {str2}, 
-              num: {num}, 
+              str1: {str_1},
+              str2: {str_2},
+              num: {num},
               bool: {bool},
               dyn1: {dyn1},
               dyn2: {dyn2},
-              nested_arr: {nested_arr},
+              nested_arr: {zip_fs},
               nested_obj: {
-                str: nested_obj_str,
-                num: nested_obj_num
+                str: {str_other},
+                num: {num_other}
               },
-              thousandth: {thousandth},
-              sparse_<<sparse_cluster>>0: {sparse_values_0},
-              sparse_<<sparse_cluster>>1: {sparse_values_1},
-              sparse_<<sparse_cluster>>2: {sparse_values_2},
-              sparse_<<sparse_cluster>>3: {sparse_values_3},
-              sparse_<<sparse_cluster>>4: {sparse_values_4},
-              sparse_<<sparse_cluster>>5: {sparse_values_5},
-              sparse_<<sparse_cluster>>6: {sparse_values_6},
-              sparse_<<sparse_cluster>>7: {sparse_values_7},
-              sparse_<<sparse_cluster>>8: {sparse_values_8},
-              sparse_<<sparse_cluster>>9: {sparse_values_9}
+              sparse_{sparse_val}0: {sparse_0_str},
+              sparse_{sparse_val}1: {sparse_1_str},
+              sparse_{sparse_val}2: {sparse_2_str},
+              sparse_{sparse_val}3: {sparse_3_str},
+              sparse_{sparse_val}4: {sparse_4_str},
+              sparse_{sparse_val}5: {sparse_5_str},
+              sparse_{sparse_val}6: {sparse_6_str},
+              sparse_{sparse_val}7: {sparse_7_str},
+              sparse_{sparse_val}8: {sparse_8_str},
+              sparse_{sparse_val}9: {sparse_9_str},
             }
           ]
         }
