@@ -23,18 +23,20 @@ runTimedMethod(() => {
 
 runTimedMethod(() => {
   const random_num = 90;
+  const sparse_0 = `sparse_${random_num}0`;
+  const sparse_9 = `sparse_${random_num}9`;
   const result = collection.find(
     {
       "$or": [ 
         {
-          `sparse_${random_num}0`: {"$exists" : True} 
+          sparse_0: {"$exists" : True} 
         },
         { 
-          `sparse_${random_num}9`: {"$exists" : True} 
+          sparse_9: {"$exists" : True} 
         } 
       ]
     }, 
-   [`sparse_${random_num}0`, `sparse_${random_num}9`]
+   [sparse_0, sparse_9]
   )
   print("Result:", result);
 }, "Query 3");
