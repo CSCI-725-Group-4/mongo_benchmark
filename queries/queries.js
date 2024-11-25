@@ -29,10 +29,10 @@ runTimedMethod(() => {
     {
       "$or": [ 
         {
-          sparse_0: {"$exists" : True} 
+          sparse_0: {"$exists" : true} 
         },
         { 
-          sparse_9: {"$exists" : True} 
+          sparse_9: {"$exists" : true} 
         } 
       ]
     }, 
