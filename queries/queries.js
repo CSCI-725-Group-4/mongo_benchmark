@@ -1,17 +1,43 @@
 const dbName = "testData";
 const db = connect("localhost:27017/" + dbName);
+const collection = db.test_data;
+
+const runTimedMethod = (method, name) => {
+  const startTime = new Date();
+  method()
+  const endTime = new Date();
+  print(`${name} Total Execution Time (ms):`, endTime - startTime);
+}
 
 const startTime = new Date();
 
-// Query 1
-const result1 = db.test_data.find({}, ["str1", "num"])
-print("Query 1 Result:", result1);
+runTimedMethod(() => {
+  const result = collection.find({}, ["str1", "num"]);
+  print("Result:", result);
+}, "Query 1")
 
-// Query 2
-const result2 = db.test_data.aggregate([
-  { $group: { _id: "$category", total: { $sum: 1 } } }
-]).toArray();
-print("Query 2 Result:", result2);
+runTimedMethod(() => {
+  const result = collection.find({}, ["nested_obj.str", "nested_obj.num"]);
+  print("Result:", result);
+}, "Query 2")
+
+runTimedMethod(() => {
+  const random_num = 90;
+  const result = collection.find(
+    {
+      "$or": [ 
+        {
+          `sparse_${random_num}0`: {"$exists" : True} 
+        },
+        { 
+          `sparse_${random_num}9`: {"$exists" : True} 
+        } 
+      ]
+    }, 
+   [`sparse_${random_num}0`, `sparse_${random_num}9`]
+  )
+  print("Result:", result);
+}, "Query 3");
 
 const endTime = new Date();
 print("Total Execution Time (ms):", endTime - startTime);
