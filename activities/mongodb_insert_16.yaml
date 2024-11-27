@@ -48,6 +48,7 @@ blocks:
                 str: {str_other},
                 num: {num_other}
               },
+              thousandth: {thousandth},
               sparse_{sparse_val}0: {sparse_0_str},
               sparse_{sparse_val}1: {sparse_1_str},
               sparse_{sparse_val}2: {sparse_2_str},
