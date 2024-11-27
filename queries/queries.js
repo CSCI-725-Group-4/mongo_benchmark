@@ -31,11 +31,11 @@ runTimedMethod(() => {
   };
 
   query['$or'][0][sparse_0] = {
-    "$exists": True
+    "$exists": true
   }
 
   query['$or'][0][sparse_9] = {
-    "$exists": True
+    "$exists": true
   }
 
   const result = collection.find(
