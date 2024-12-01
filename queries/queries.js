@@ -1,6 +1,6 @@
-const dbName = "testData";
+const dbName = "benchmark";
 const db = connect("localhost:27017/" + dbName);
-const collection = db.test_data;
+const collection = db.no_sql;
 const collection_size = 16000;
 
 const runTimedMethod = (method, name, skip=false) => {
