@@ -34,7 +34,7 @@ const runTimedMethod = (method, name, {skip, print}={skip: false, print: false})
 
 const calculateBounds = (size) => {
   const lower_bound = Math.floor(Math.random() * (collection_size - (collection_size * size)));
-  const upper_bound = random_num + (collection_size * size);
+  const upper_bound = lower_bound + (collection_size * size);
   return {lower_bound, upper_bound};
 };
 
