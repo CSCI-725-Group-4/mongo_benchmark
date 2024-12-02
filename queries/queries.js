@@ -20,13 +20,13 @@ const runTimedMethod = (method, name, {skip, print}={skip: false, print: false})
   const elapsedTime = endTime - startTime;
 
   console.log(
-    `${name} Total Execution Time: `, 
+    `${name} Total Execution Time:`, 
     elapsedTime, 
-    ` (ms), `, 
+    `ms,`, 
     (elapsedTime/1000).toFixed(2),
-    ` (s), `, 
+    `s,`, 
     (elapsedTime/60000).toFixed(2), 
-    ` (min). `, 
+    `min.`, 
     print ? `\nTotal Processed Records: ${count}` : '');
 
   return elapsedTime;
@@ -103,7 +103,7 @@ totalElapsedTime += runTimedMethod(() => {
   const rifleShotStr = 'RT2CJT9WQR5QI1VDGBJ9L3LR29ODAS6CW9EKKUEHTPK6TOP61G'
 
   return collection.find({str1: rifleShotStr});
-}, "Query 5", {print:true});
+}, "Query 5");
 
 totalElapsedTime += runTimedMethod(() => {
   const {lower_bound, upper_bound} = calculateBounds(0.001);
@@ -156,7 +156,7 @@ totalElapsedTime += runTimedMethod(() => {
     },
     {
       $group: {
-        _id: thousandth,
+        _id: '$thousandth',
         total: { $sum: 1 }
       }
     }
