@@ -3,30 +3,51 @@ const db = connect("localhost:27017/" + dbName);
 const collection = db.no_sql;
 const collection_size = 16000;
 
-const runTimedMethod = (method, name, skip=false) => {
+const runTimedMethod = (method, name, {skip, print}={skip: false, print: false}) => {
   if (skip) {
-    print(`Skipping ${name}...`);
-    return;
+    console.log(`Skipping ${name}...`);
+    return 0;
   }
+
+  let count = 0;
+
   const startTime = new Date();
-  method();
+  method().forEach(_ => {
+    count++;
+  });
   const endTime = new Date();
-  print(`${name} Total Execution Time (ms):`, endTime - startTime);
+
+  const elapsedTime = endTime - startTime;
+
+  console.log(
+    `${name} Total Execution Time (ms):`, 
+    elapsedTime, 
+    `${name} Total Execution Time (s):`, 
+    elapsedTime/1000,
+    `${name} Total Execution Time (min):`, 
+    elapsedTime/60000, 
+    print ? `\nTotal Processed Records: ${count}` : '');
+
+  return elapsedTime;
 }
 
-const startTime = new Date();
+const calculateBounds = (size) => {
+  const lower_bound = Math.floor(Math.random() * (collection_size - (collection_size * size)));
+  const upper_bound = random_num + (collection_size * size);
+  return {lower_bound, upper_bound};
+};
 
-runTimedMethod(() => {
-  const result = collection.find({}, ["str1", "num"]).toArray();
-//   print("Result:", result);
+const totalElapsedTime = 0;
+
+totalElapsedTime += runTimedMethod(() => {
+  return collection.find({}, ["str1", "num"]);
 }, "Query 1")
 
-runTimedMethod(() => {
-  const result = collection.find({}, ["nested_obj.str", "nested_obj.num"]).toArray();
-//   print("Result:", result);
+totalElapsedTime += runTimedMethod(() => {
+  return collection.find({}, ["nested_obj.str", "nested_obj.num"]);
 }, "Query 2")
 
-runTimedMethod(() => {
+totalElapsedTime += runTimedMethod(() => {
   const random_num = Math.floor(Math.random() * 100).toString().padStart(2, '0');
   const sparse_0 = `sparse_${random_num}0`;
   const sparse_9 = `sparse_${random_num}9`;
@@ -43,15 +64,13 @@ runTimedMethod(() => {
     "$exists": true
   }
 
-  const result = collection.find(
+  return collection.find(
     query,
    [sparse_0, sparse_9]
-  ).toArray();
-  
-//   print("Result:", result);
+  );
 }, "Query 3");
 
-runTimedMethod(() => {
+totalElapsedTime += runTimedMethod(() => {
   const random_num_1 = Math.floor(Math.random() * 100).toString().padStart(2, '0');
   const random_num_2 = Math.floor(Math.random() * 100).toString().padStart(2, '0');
   while (random_num_2 == random_num_1) {
@@ -73,53 +92,63 @@ runTimedMethod(() => {
     "$exists": true
   }
 
-  const result = collection.find(
+  return collection.find(
     query,
    [sparse_1, sparse_2]
-  ).toArray();
-  
-//   print("Result:", result);
+  );
 }, "Query 4");
 
-runTimedMethod(() => {
-  //TODO: Implement
-}, "Query 5", skip=true);
+totalElapsedTime += runTimedMethod(() => {
+  const rifleShotStr = 'RT2CJT9WQR5QI1VDGBJ9L3LR29ODAS6CW9EKKUEHTPK6TOP61G'
 
-runTimedMethod(() => {
-  const random_num = Math.floor(Math.random() * (collection_size - (collection * 0.001)));
-  const result = collection.find(
-    { "$and": [{ "num" : { "$gte" : random_num } }, { "num" : { "$lt" : random_num  + (collection * 0.001) } }]}
-  ).toArray();
-  
-  // print("Result:", result, "\nSize:", result.length);
+  return collection.find({str1: rifleShotStr});
+}, "Query 5", {print:true});
+
+totalElapsedTime += runTimedMethod(() => {
+  const {lower_bound, upper_bound} = calculateBounds(0.001);
+  return collection.find(
+    { 
+      "$and": [
+        { "num" : { "$gte" : lower_bound } }, 
+        { "num" : { "$lt" : upper_bound } }
+      ]
+    }
+  );
 }, "Query 6");
 
-runTimedMethod(() => {
-  const random_num = Math.floor(Math.random() * (collection_size - (collection * 0.001)));
-  const result = collection.find(
-    { "$and": [{ "dyn1" : { "$gte" : random_num } }, { "dyn1" : { "$lt" : random_num  + (collection * 0.001) } }]}
-  ).toArray();
-  
-  // print("Result:", result, "\nSize:", result.length);
+totalElapsedTime += runTimedMethod(() => {
+  const {lower_bound, upper_bound} = calculateBounds(0.001);
+  return collection.find(
+    { 
+      "$and": [
+        { "dyn1" : { "$gte" : lower_bound } }, 
+        { "dyn1" : { "$lt" : upper_bound } }
+      ]
+    }
+  );
 }, "Query 7");
 
-runTimedMethod(() => {
+totalElapsedTime += runTimedMethod(() => {
   const query_string = 'He/pps took/vbd the/at suitcase/nn out/rp to/in the/at Jeep/nn-tl and/cc put/vbd it/ppo in/in the/at front/jj seat/nn ./.';
-  const result = collection.find(
+  return collection.find(
     { "nested_arr" : query_string }
-  ).toArray();
-  
-  // print("Result:", result, "\nSize:", result.length);
+  );
 }, "Query 8");
 
-runTimedMethod(() => {
-  const random_num = Math.floor(Math.random() * (collection_size - (collection * 0.1)));
-  const result = collection.aggregate([
+totalElapsedTime += runTimedMethod(() => {
+  const sparse000Str = 'VE0I3B3XGRP0AGEQ3NOO73TIRFWZZUZCZB7AQE1A6QVZZLWEPN'
+
+  return collection.find({sparse_000: sparse000Str});
+}, "Query 9", {print:true});
+
+totalElapsedTime += runTimedMethod(() => {
+  const {lower_bound, upper_bound} = calculateBounds(0.1);
+  return collection.aggregate([
     {
       $match: {
         $and: [
-          { num: { $gte: random_num } },
-          { num: { $lt: random_num + (collection * 0.1) } }
+          { num: { $gte: lower_bound } },
+          { num: { $lt: upper_bound } }
         ],
         thousandth: {'$exists': true}
       }
@@ -130,11 +159,26 @@ runTimedMethod(() => {
         total: { $sum: 1 }
       }
     }
-  ]).toArray();
-  
-  print("Result:", result, "\nSize:", result.length);
-}, "Query 9");
+  ]);
+}, "Query 10", {print:true});
 
-const endTime = new Date();
-print("Total Execution Time (ms):", endTime - startTime);
+totalElapsedTime += runTimedMethod(() => {
+  const {lower_bound, upper_bound} = calculateBounds(0.001);
+  return collection.aggregate([
+    {
+      $match: {
+        num: { $gte: lower_bound, $lte: upper_bound }
+      }
+    },
+    {
+      $lookup: {
+        from: "no_sql",
+        localField: "nested_obj.str",
+        foreignField: "str1",
+        as: "matchedDocs"
+      }
+    }
+  ]);
+}, "Query 11", {print:true});
 
+console.log("Total Execution Time (ms):", totalElapsedTime);
