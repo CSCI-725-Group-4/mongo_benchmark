@@ -23,9 +23,9 @@ const runTimedMethod = (method, name, {skip, print}={skip: false, print: false})
     `${name} Total Execution Time: `, 
     elapsedTime, 
     ` (ms), `, 
-    (elapsedTime/1000).toPrecision(2),
+    (elapsedTime/1000).toFixed(2),
     ` (s), `, 
-    (elapsedTime/60000).toPrecision(2), 
+    (elapsedTime/60000).toFixed(2), 
     ` (min). `, 
     print ? `\nTotal Processed Records: ${count}` : '');
 
