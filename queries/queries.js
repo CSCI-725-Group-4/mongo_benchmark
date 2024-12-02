@@ -20,12 +20,13 @@ const runTimedMethod = (method, name, {skip, print}={skip: false, print: false})
   const elapsedTime = endTime - startTime;
 
   console.log(
-    `${name} Total Execution Time (ms):`, 
+    `${name} Total Execution Time: `, 
     elapsedTime, 
-    `${name} Total Execution Time (s):`, 
-    elapsedTime/1000,
-    `${name} Total Execution Time (min):`, 
-    elapsedTime/60000, 
+    ` (ms), `, 
+    (elapsedTime/1000).toPrecision(2),
+    ` (s), `, 
+    (elapsedTime/60000).toPrecision(2), 
+    ` (min). `, 
     print ? `\nTotal Processed Records: ${count}` : '');
 
   return elapsedTime;
