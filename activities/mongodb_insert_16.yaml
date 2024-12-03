@@ -2,7 +2,7 @@ description: Testing Identity function for generating sequential integer num
 
 scenarios:
   default:
-    insert: run driver=mongodb connection=mongodb://localhost:27017 database=testData tags==block:"insert.*" cycles===TEMPLATE(rampup-cycles,10) threads=1
+    insert: run driver=mongodb connection=mongodb://localhost:27017 database=benchmark tags==block:"insert.*" cycles===TEMPLATE(rampup-cycles,10) threads=auto
 
 bindings:
   num: Identity()
@@ -34,7 +34,7 @@ blocks:
     ops:
       insert: >2
         {
-          insert: "<<collection:test_data>>",
+          insert: "<<collection:no_sql>>",
           documents: [
             { 
               str1: {str_1},
@@ -48,6 +48,7 @@ blocks:
                 str: {str_other},
                 num: {num_other}
               },
+              thousandth: {thousandth},
               sparse_{sparse_val}0: {sparse_0_str},
               sparse_{sparse_val}1: {sparse_1_str},
               sparse_{sparse_val}2: {sparse_2_str},
