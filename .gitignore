@@ -1,3 +1,4 @@
 logs/*
 nb5*
 *.log
+.venv/*
